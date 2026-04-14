@@ -10,7 +10,7 @@ void set_coders(t_coder *coder,unsigned int n_coders)
         (coder+index)->count_compiled = 0;
         (coder+index)->left = NULL;
         (coder+index)->right= NULL; 
-        (coder+index++)->state_coder = "initialization";
+        (coder+index++)->state_coder = "compile_step";
         i += 2;
         
     }
@@ -21,7 +21,7 @@ void set_coders(t_coder *coder,unsigned int n_coders)
         (coder+index)->count_compiled = 0;
         (coder+index)->left = NULL;
         (coder+index)->right= NULL; 
-        (coder+index++)->state_coder = "initialization";
+        (coder+index++)->state_coder = "to_do";
         i += 2;
     }
 

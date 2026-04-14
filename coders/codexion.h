@@ -47,7 +47,6 @@ typedef struct
     t_coder *queue_coders;
     t_dongle *list_dongles;
     unsigned int size_coders;
-    int index_queue;
     int start_index_list;
     t_args *args;
 } t_shared_data;
@@ -61,5 +60,7 @@ void free_pointer(void *ptr);
 void free_list (t_dongle *list);
 unsigned int size_list(t_dongle *head);
 t_dongle *get_dongle(unsigned int index,t_dongle *head);
+void rotate(t_dongle **pptr);
+void rrotate(t_dongle **pptr);
 
 #endif 

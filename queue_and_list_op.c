@@ -23,12 +23,32 @@ t_dongle *get_dongle(unsigned int index,t_dongle *head)
     return NULL;
 }
 
-// void rotate(t_dongle **pptr)
-// {
-//     t_dongle *tmp = *pptr;
-//     *pptr = head->next;
-//     while (head->next)
-//         head = head->next;
-//     head->next = tmp;
-    
-// }
+void rotate(t_dongle **pptr)
+{
+    t_dongle *head = *pptr;
+    if (head && head->next)
+    {
+        while (head && head->next)
+            head = head->next;
+        head->next = *pptr;
+        *pptr = (*pptr)->next;
+        head->next->next = NULL; 
+    }   
+}
+
+
+void rrotate(t_dongle **pptr)
+{
+    t_dongle *head = *pptr;
+    if(head && head->next)
+    {
+        while (head && head->next && head->next->next)
+            head = head->next;
+        t_dongle *tmp = head->next;
+        head->next = NULL;
+        tmp->next = *pptr;
+        *pptr = tmp;
+
+
+    }    
+}

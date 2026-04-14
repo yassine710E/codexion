@@ -24,43 +24,49 @@ void *routine(void *data)
 {
     t_shared_data *s_data = (t_shared_data *)data;
     unsigned int count_compiles = 0;
-    while(count_compiles < s_data->args->number_of_compiles_required)
+    // while(count_compiles < s_data->args->number_of_compiles_required)
+    // {
+    if (s_data->start_index_list >= 0 && !strcmp((s_data->queue_coders)->state_coder,"compile_step"))
     {
-    if (s_data->start_index_list >= 0)
-    {
-        printf("coder %d , left dongle %d ,right dongle %d\n",((s_data->queue_coders)+s_data->index_queue)->coder_id,
-        s_data->start_index_list+1,s_data->start_index_list+2);
-        (s_data->queue_coders+s_data->index_queue)->state_coder = "compiling";
+        printf("(%s) coder %d work with left dongle %d and right dongle %d\n",(s_data->queue_coders)->state_coder,((s_data->queue_coders))->coder_id,
+        get_dongle(s_data->start_index_list,s_data->list_dongles)->dongle_id,get_dongle(s_data->start_index_list+1,s_data->list_dongles)->dongle_id);
         compile(s_data->args->time_to_compile*1000);
         count_compiles++;
+        usleep(s_data->args->dongle_cooldown*1000);
         s_data->start_index_list = -1;
+        (s_data->queue_coders)->state_coder = "debug_and_refactor_step";
+        //rotate
+        if (s_data->args->number_of_coders % 2 == 0)
+            rotate(&(s_data->list_dongles));
+        else
+            rrotate(&(s_data->list_dongles));
+        //fifo
+        
+        
+
+
     }
-    else if(!strcmp((s_data->queue_coders+s_data->index_queue)->state_coder,"initialization"))
+    else if(!strcmp((s_data->queue_coders)->state_coder,"to_do"))
     {
         printf("sleep the process less than burnout deadline ...\n");
         usleep(s_data->args->time_to_burnout - 1);
         s_data->start_index_list = 0;
+        (s_data->queue_coders)->state_coder = "compile_step";
+
+
+
+
 
     }
-    else
+    else if(!strcmp((s_data->queue_coders)->state_coder,"debug_and_refactor_step"))
     {
-        (s_data->queue_coders+s_data->index_queue)->state_coder = "debugging";
-        debug(s_data->args->time_to_debug*1000);
-        (s_data->queue_coders+s_data->index_queue)->state_coder = "refactoring";
-        refactor(s_data->args->time_to_refactor*1000);
+        printf("(%s) for coder %d\n",(s_data->queue_coders)->state_coder,(s_data->queue_coders)->coder_id);
+        debug(s_data->args->time_to_debug * 1000);
+        refactor(s_data->args->time_to_refactor * 1000);
         s_data->start_index_list = 0;
-        unsigned int i = (s_data->args->number_of_coders/2);
-        while (i < (s_data->args->number_of_coders))
-        {
-            s_data->queue_coders[i - (s_data->args->number_of_coders/2)] = s_data->queue_coders[i];
-            i++;
-        }
-        
-        s_data->queue_coders = realloc(s_data->queue_coders,sizeof(t_coder) * ((s_data->args->number_of_coders)-(s_data->args->number_of_coders/2)));
-        s_data->size_coders = s_data->args->number_of_coders / 2;
-
-
-    }}
+        (s_data->queue_coders)->state_coder = "compile_step";
+    }
+// }
     return NULL;
 }
 
@@ -77,7 +83,7 @@ int main(int c,char **v)
         free(args);
         return 1;
     }
-    pthread_t arr[args->number_of_coders];
+    // pthread_t arr[args->number_of_coders];
     t_shared_data *s_data = malloc(sizeof(t_shared_data) * args->number_of_coders);
     t_coder *coders = malloc(sizeof(t_coder) * args->number_of_coders);
     t_dongle *dongles = malloc(sizeof(t_dongle));
@@ -93,20 +99,25 @@ int main(int c,char **v)
     //[0,1,2,3,4] : index queue [2,3,4]
     //[0,2] ==> [0,1,2,3,4] : [4,0,1,2,3]
     int index_d = 0;
-    while (++i < (int)args->number_of_coders)
+    while (++i < (int)args->number_of_coders){
         arr_indexes_coders[i] = i;
+        printf("%d\n",arr_indexes_coders[i]);
+    }
 
     i = -1;
+    printf("$$$$$$$$$$$$$$$\n");
     while (++i < (int)(args->number_of_coders / 2))
     {
         arr_indexes_dongles[i] = index_d;
+        printf("%d\n",arr_indexes_dongles[i]);
         index_d += 2; 
     }
+    printf("$$$$$$$$$$$$$$$\n");    
+    
     i = -1;
     while (++i < (int)args->number_of_coders)
     {
         set_shared_data(s_data+i,coders,dongles,args);
-        (s_data+i)->index_queue = arr_indexes_coders[i];
         if(i < (int)(args->number_of_coders / 2))
         {
             (s_data+i)->start_index_list = arr_indexes_dongles[i];
@@ -114,11 +125,12 @@ int main(int c,char **v)
         else{
             (s_data+i)->start_index_list = -1;
         }
-        pthread_create (arr+i,NULL,routine,s_data+i);
+        // pthread_create (arr+i,NULL,routine,s_data+i);
+        printf("%d\n",(s_data+i)->start_index_list);
     }
     i = -1;
-    while (++i < (int)args->number_of_coders)
-        pthread_join(arr[i],NULL);    
+    // while (++i < (int)args->number_of_coders)
+    //     pthread_join(arr[i],NULL);    
     
     free_pointer(coders);
     free_list(dongles);
