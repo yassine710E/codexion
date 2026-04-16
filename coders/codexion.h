@@ -28,39 +28,31 @@ typedef struct s_dongle
 {
     unsigned int dongle_id;
     int state_dongle;
-    struct s_dongle *next;
 
 } t_dongle;
 
-typedef struct 
+typedef struct s_coder
 {
     unsigned int coder_id;
     unsigned int count_compiled;
-    char *state_coder;
     t_dongle *left;
     t_dongle *right;
+    struct s_coder *next;
 } t_coder;
 
 
 typedef struct
 {
+    unsigned int id_thread;
     t_coder *queue_coders;
-    t_dongle *list_dongles;
-    unsigned int size_coders;
-    int start_index_list;
     t_args *args;
 } t_shared_data;
 
 
 int parsing (int c,char **v,t_args *args);
 void set_coders(t_coder *coder,unsigned int n_coders);
-void set_dongles (t_dongle *dongle,unsigned int n_dongles);
-void set_shared_data(t_shared_data *data,t_coder *coders,t_dongle *dongles,t_args *args);
+void set_dongles (t_coder *coder);
+void set_shared_data(unsigned int id,t_shared_data *data,t_coder *coders,t_args *args);
 void free_pointer(void *ptr);
-void free_list (t_dongle *list);
-unsigned int size_list(t_dongle *head);
-t_dongle *get_dongle(unsigned int index,t_dongle *head);
-void rotate(t_dongle **pptr);
-void rrotate(t_dongle **pptr);
-
+t_coder *get_coder(t_coder *coder,unsigned int id_coder);
 #endif 

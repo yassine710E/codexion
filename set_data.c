@@ -2,56 +2,85 @@
 
 void set_coders(t_coder *coder,unsigned int n_coders)
 {
+
     unsigned int i = 1;
     unsigned int index = 0;
+    int ids[n_coders]; 
     while (i <= n_coders)
     {
-        (coder+index)->coder_id = i;
-        (coder+index)->count_compiled = 0;
-        (coder+index)->left = NULL;
-        (coder+index)->right= NULL; 
-        (coder+index++)->state_coder = "compile_step";
+        ids[index++] = i;
         i += 2;
-        
     }
     i = 2;
     while (i <= n_coders)
     {
-        (coder+index)->coder_id = i;
-        (coder+index)->count_compiled = 0;
-        (coder+index)->left = NULL;
-        (coder+index)->right= NULL; 
-        (coder+index++)->state_coder = "to_do";
+        ids[index++] = i;
         i += 2;
     }
-
-}
-
-void set_dongles (t_dongle *dongle,unsigned int n_dongles)
-{
-    unsigned int i = 0;
-    while (i < n_dongles)
+    i = 0;
+    while (i < n_coders)
     {
-        dongle->dongle_id = i+1;
-        dongle->state_dongle = 1;
-        if(i < n_dongles - 1)
-            dongle->next = malloc(sizeof(t_dongle));
+        coder->coder_id =  ids[i];
+        coder->count_compiled = 0;
+        coder->left = NULL;
+        coder->right = NULL;
+
+        if(i == n_coders - 1)
+            coder->next = NULL;
         else
-            dongle->next = NULL;
-        dongle = dongle->next;
+            coder->next = malloc(sizeof(t_coder));
+
+        coder = coder->next;
         i++;
     }
     
+
 }
 
-void set_shared_data(t_shared_data *data,t_coder *coders,t_dongle *dongles,t_args *args)
+t_coder *get_coder(t_coder *coder,unsigned int id_coder)
 {
+    while(coder)
+    {
+        if (coder->coder_id == id_coder){
+            return coder;
+            }
+        
+        coder = coder->next;
+    }   
+    return NULL;
+}
+
+void set_dongles (t_coder *coder)
+{
+    unsigned int i = 0;
+    t_dongle *dongle;
+    t_coder *c_coder = coder;
+    while (c_coder)
+    {
+
+        dongle = malloc(sizeof(t_dongle));
+        dongle->dongle_id = c_coder->coder_id;
+        c_coder->left = dongle;
+        c_coder = c_coder->next;
+        i++;
+    }
+    c_coder = coder;
+    i = 0;
+    t_dongle *first_coder_l_dongle = c_coder->left;
+    while (c_coder)
+    {
+        t_coder *coder_goal = get_coder(coder,c_coder->coder_id+1);
+        c_coder->right = coder_goal ? coder_goal->left : first_coder_l_dongle;
+        c_coder = c_coder->next;
+        i++;
+    }
+}
+
+void set_shared_data(unsigned int id,t_shared_data *data,t_coder *coders,t_args *args)
+{
+    data->id_thread = id;
     data->queue_coders = coders;
-    data->list_dongles = dongles;
     data->args = args;
-    data->size_coders = args->number_of_coders;
-    data->start_index_list = 0;
-    data->index_queue = 0; 
 
 }
 
