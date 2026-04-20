@@ -1,86 +1,22 @@
 #include "coders/codexion.h"
 
-void set_coders(t_coder *coder,unsigned int n_coders)
+t_dongle *ft_create_dongle(unsigned int dongle_id)
 {
-
-    unsigned int i = 1;
-    unsigned int index = 0;
-    int ids[n_coders]; 
-    while (i <= n_coders)
-    {
-        ids[index++] = i;
-        i += 2;
-    }
-    i = 2;
-    while (i <= n_coders)
-    {
-        ids[index++] = i;
-        i += 2;
-    }
-    i = 0;
-    while (i < n_coders)
-    {
-        coder->coder_id =  ids[i];
-        coder->count_compiled = 0;
-        coder->left = NULL;
-        coder->right = NULL;
-
-        if(i == n_coders - 1)
-            coder->next = NULL;
-        else
-            coder->next = malloc(sizeof(t_coder));
-
-        coder = coder->next;
-        i++;
-    }
-    
-
+    t_dongle *dongle = malloc(sizeof(t_dongle));
+    if(!dongle)
+        return NULL;
+    dongle->dongle_id = dongle_id;
+    return dongle;
 }
 
-t_coder *get_coder(t_coder *coder,unsigned int id_coder)
+t_coder *ft_create_coder(unsigned int coder_id,unsigned int priorety,t_dongle *left,t_dongle *right)
 {
-    while(coder)
-    {
-        if (coder->coder_id == id_coder){
-            return coder;
-            }
-        
-        coder = coder->next;
-    }   
-    return NULL;
+    t_coder *coder = malloc(sizeof(t_coder));
+    if(!coder)
+        return NULL;
+    coder->coder_id = coder_id;
+    coder->priorety = priorety;
+    coder->left = left;
+    coder->right = right;
+    return coder;
 }
-
-void set_dongles (t_coder *coder)
-{
-    unsigned int i = 0;
-    t_dongle *dongle;
-    t_coder *c_coder = coder;
-    while (c_coder)
-    {
-
-        dongle = malloc(sizeof(t_dongle));
-        dongle->dongle_id = c_coder->coder_id;
-        c_coder->left = dongle;
-        c_coder = c_coder->next;
-        i++;
-    }
-    c_coder = coder;
-    i = 0;
-    t_dongle *first_coder_l_dongle = c_coder->left;
-    while (c_coder)
-    {
-        t_coder *coder_goal = get_coder(coder,c_coder->coder_id+1);
-        c_coder->right = coder_goal ? coder_goal->left : first_coder_l_dongle;
-        c_coder = c_coder->next;
-        i++;
-    }
-}
-
-void set_shared_data(unsigned int id,t_shared_data *data,t_coder *coders,t_args *args)
-{
-    data->id_thread = id;
-    data->queue_coders = coders;
-    data->args = args;
-
-}
-

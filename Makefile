@@ -2,7 +2,7 @@ NAME = codexion
 
 CFLAGS = -Wall -Wextra -Werror -pthread
 
-SRC = main.c parsing.c set_data.c free_instructions.c queue_and_list_op.c
+SRC = main.c parsing.c set_data.c free_instructions.c min_heap_operations.c
 
 OBJ = $(SRC:.c=.o)
 

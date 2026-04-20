@@ -3,67 +3,12 @@
 pthread_mutex_t mutex_1;
 pthread_cond_t cond_1;
 
-void compile(unsigned int time_to_compile)
+
+void *routine_set_coders_in_queue(void *data)
 {
-    usleep(time_to_compile*1000);
-}
-
-void debug(unsigned int time_to_debug)
-{
-    usleep(time_to_debug*1000);
-}
-
-void refactor(unsigned int time_to_refactor)
-{
-    usleep(time_to_refactor*1000);
-}
-
-
-void *monitor(void *data)
-{
-    (void)data;
-    return NULL;
-
-}
-
-
-void *routine(void *data)
-{
+    t_shared_data *s_data = (t_shared_data *)data;
     pthread_mutex_lock(&mutex_1);
-    t_shared_data *t_data = (t_shared_data *)data;
-    t_coder *coder = get_coder(t_data->queue_coders,t_data->id_thread);
-    if(coder->left->state_dongle && coder->right->state_dongle )
-        pthread_cond_wait(&cond_1,&mutex_1);
-    else
-    {
-        coder->left->state_dongle = 1;
-        coder->right->state_dongle = 1;
-        compile(t_data->args->time_to_compile);
-        printf("coder %d compiling ...., unsing dongle  left %d(%p)=>{%d} and right %d(%p)=>{%d}\n",
-        coder->coder_id,
-        coder->left->dongle_id,
-        coder->left,
-        coder->left->state_dongle,
-        coder->right->dongle_id,
-        coder->right,
-        coder->right->state_dongle
-        );
-        usleep(t_data->args->dongle_cooldown * 1000);
-        coder->left->state_dongle = 0;
-        coder->right->state_dongle = 0;
-        pthread_cond_broadcast(&cond_1);
-
-    }
-    
-    // // else{
-
-    
-
-    // if(!coder->left->state_dongle || !coder->right->state_dongle)
-    //     printf("not allowed to run \n");
-    // else
-    //     printf("allow to run \n");
-    // // }
+    push(s_data->m_heap,s_data->coder);
     pthread_mutex_unlock(&mutex_1);
 
     return NULL;
@@ -71,52 +16,104 @@ void *routine(void *data)
 
 
 
+void *routine(void *data)
+{
+    (void)data;
+    return NULL;
+}
+
+
+
 int main(int c,char **v)
 {
-    pthread_mutex_init(&mutex_1,NULL);
-    pthread_cond_init(&cond_1,NULL);
-    t_args *args = malloc(sizeof(t_args));
-    if(!args)
+    pthread_mutex_init(&mutex_1, NULL);  
+    pthread_cond_init(&cond_1, NULL); 
+    t_args args;
+    if(!parsing(c,v,&args))
         return 1;
-    if(!parsing(c,v,args))
-    {
-        free(args);
+    min_heap *m_heap = malloc(sizeof(min_heap));
+    t_coder tmp;
+    pthread_t arr_pthread[args.number_of_coders];
+    t_shared_data *shared_data = malloc(sizeof(t_shared_data) * args.number_of_coders);
+    if(!m_heap  || !shared_data)
         return 1;
-    }
-    pthread_t arr[args->number_of_coders];
-    t_shared_data *s_data = malloc(sizeof(t_shared_data) * args->number_of_coders);
-    t_coder *coders = malloc(sizeof(t_coder));
-    t_coder *c_coders = coders;
-    if(!coders  || !s_data)
+    m_heap->queue = malloc(sizeof(t_coder) * args.number_of_coders);
+    m_heap->size = 0;
+    if(!m_heap->queue)
         return 1;
-    set_coders(coders,args->number_of_coders);
-    set_dongles(coders);
 
-    
-    int i = -1;
-    while (++i < (int)args->number_of_coders)
-    {
-        set_shared_data(c_coders->coder_id,s_data+i,coders,args);
-        c_coders = c_coders->next;
-        pthread_create(&arr[i],NULL,routine,s_data+i);
-    }
+    int i,even_or_odd_id;
     i = -1;
-    while (++i < (int)args->number_of_coders)
-        pthread_join(arr[i],NULL);
+    even_or_odd_id = 1;
+    t_dongle *f_coder_left;
+    t_dongle *arr_dongles[args.number_of_coders];
+    t_dongle *left;
+    t_dongle *right;
+
+    int index_arr_dongles = 0;
+    while (++i < (int)args.number_of_coders)
+    {
+        if(even_or_odd_id % 2 == 0)
+        {
+            left = arr_dongles[index_arr_dongles++];
+            right = arr_dongles[index_arr_dongles++];
+        }
+        else
+        {
+            left= ft_create_dongle(even_or_odd_id);
+            if(i == 0)
+                f_coder_left = left;
+            right = even_or_odd_id == (int)args.number_of_coders ? f_coder_left : ft_create_dongle(even_or_odd_id + 1);
+            if(i == 0)
+                  arr_dongles[index_arr_dongles++] = right;  
+            else
+            {
+                arr_dongles[index_arr_dongles++] = left;
+                arr_dongles[index_arr_dongles++] = right;
+            }
+        }
+        tmp.count_compiled = 0;
+        tmp.coder_id = even_or_odd_id;
+        tmp.priorety = i+1;
+        tmp.left = left;
+        tmp.right = right;
+        even_or_odd_id += 2;
+        if(even_or_odd_id > (int)args.number_of_coders){
+            even_or_odd_id = 2;
+            if (index_arr_dongles < (int)args.number_of_coders)
+                arr_dongles[index_arr_dongles] = f_coder_left;
+            index_arr_dongles = 0;
+        }
+        (shared_data+i)->args = &args;
+        (shared_data+i)->coder = tmp;
+        (shared_data+i)->m_heap = m_heap;
+        pthread_create(arr_pthread + i,NULL,routine_set_coders_in_queue,(shared_data + i));
+    }
+
+    i = -1;
+    while (++i < (int)args.number_of_coders)
+        pthread_join(arr_pthread[i],NULL);
+    
+    
+    
+    i = -1;
+    printf("after : \n");
+    while (++i < (int)m_heap->size)
+        printf("priority : %d\n",m_heap->queue[i].priorety);
+        
 
 
     
-    
-    
-   
-    
-    // free_pointer(coders);
-    // // free_list(dongles);
-    // free_pointer(args); 
-    // free_pointer(s_data);
-    pthread_cond_destroy(&cond_1);
 
-    pthread_mutex_destroy(&mutex_1);
+
+
+    
+    
+    
+    pthread_cond_destroy(&cond_1);       
+    pthread_mutex_destroy(&mutex_1);     
+    
+
 
 
     return 0;
