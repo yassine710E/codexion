@@ -49,7 +49,12 @@ typedef struct
     min_heap *m_heap;
     t_coder coder;
     t_args *args;
+    pthread_mutex_t *mutex_1;
+    pthread_cond_t *cond_1;
+    unsigned int *c_compiling_at_the_sametime;
 } t_shared_data;
+
+
 
 
 
@@ -57,4 +62,5 @@ int parsing (int c,char **v,t_args *args);
 t_dongle *ft_create_dongle(unsigned int dongle_id);
 t_coder *ft_create_coder(unsigned int coder_id,unsigned int priorety,t_dongle *left,t_dongle *right);
 void push(min_heap *m_heap,t_coder coder);
+void pop(min_heap *m_heap);
 #endif 
