@@ -1,6 +1,6 @@
 NAME = codexion
 
-CFLAGS = -Wall -Wextra -Werror -pthread
+CFLAGS = -g -Wall -Wextra -Werror -pthread 
 
 SRC = main.c parsing.c set_data.c free_instructions.c min_heap_operations.c
 

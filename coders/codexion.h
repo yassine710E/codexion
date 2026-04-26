@@ -70,4 +70,6 @@ void push(min_heap *m_heap,t_coder coder);
 void pop(min_heap *m_heap);
 int ft_get_index (min_heap *m_heap,unsigned int coder_id);
 void move_coder(min_heap *m_heap,unsigned int index_from,int *index_ptr);
+void update_index(int *ptr_to_index,min_heap *m_heap,unsigned int coder_id);
+void rotate_queue(min_heap *m_heap);
 #endif 

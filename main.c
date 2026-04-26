@@ -115,46 +115,77 @@ void cooldown (TIME t_cooldown)
 //     return NULL;
 // }
 
+//[1,3,4,6,5,2]
+//[1,3,5,2,4,6]
+//[2,4,6,1,3,5]
+
+void ft_print_queue(min_heap *m_heap)
+{
+    unsigned int i = 0;
+    while (i < m_heap->size)
+    {
+        printf("%d ",m_heap->queue[i].coder_id);
+        i++;
+    }
+    
+}
+
+//[1,2,3,4,5,7,8,6,9,10]
+//[1,3,5,7,9,8,2,4,10,6]
+
 void *routine(void *data)
 {
     t_shared_data *s_data = (t_shared_data *)data;
-    pthread_mutex_lock(s_data->mutex_1);
+      pthread_mutex_lock(s_data->mutex_1);
 
-    int index_coder = ft_get_index(s_data->m_heap,s_data->coder.coder_id);
-    if(index_coder == -1)
-    {
-        pthread_mutex_unlock(s_data->mutex_1);
-        return NULL;
-    }
-
-    if(!s_data->m_heap->queue[index_coder].left->state_dongle && !s_data->m_heap->queue[index_coder].right->state_dongle)
-    {
-        s_data->m_heap->queue[index_coder].left->state_dongle = 1;
-        s_data->m_heap->queue[index_coder].right->state_dongle = 1;
-        s_data->m_heap->queue[index_coder].state_coder = 1;
-        move_coder(s_data->m_heap,index_coder,&index_coder); 
-        printf("coder %d takes dongle %d\n",s_data->m_heap->queue[index_coder].coder_id,s_data->m_heap->queue[index_coder].left->dongle_id);
-        printf("coder %d takes dongle %d\n",s_data->m_heap->queue[index_coder].coder_id,s_data->m_heap->queue[index_coder].right->dongle_id);
-        printf("coder %d is compiling ...\n",s_data->m_heap->queue[index_coder].coder_id);
-        printf("\n");
-
-        pthread_mutex_unlock(s_data->mutex_1);
-        compiling(s_data->args->time_to_compile);
-        cooldown(s_data->args->dongle_cooldown);
+      int index_coder = ft_get_index(s_data->m_heap,s_data->coder.coder_id);
+      if(index_coder == -1)
+      {
+          pthread_mutex_unlock(s_data->mutex_1);
+          return NULL;
+      }
+      while (s_data->m_heap->queue[index_coder].left->state_dongle || s_data->m_heap->queue[index_coder].right->state_dongle)
+      {
+          pthread_cond_wait(s_data->cond_1,s_data->mutex_1);
+          
+          //program must update index (because of swaping coders) 
+          update_index(&index_coder,s_data->m_heap,s_data->coder.coder_id);
+          if(index_coder == -1)
+          {
+              pthread_mutex_unlock(s_data->mutex_1);
+              return NULL;
+          }
+      }
+      s_data->m_heap->queue[index_coder].left->state_dongle = 1;
+      s_data->m_heap->queue[index_coder].right->state_dongle = 1;
+      s_data->m_heap->queue[index_coder].state_coder = 1;
+      move_coder(s_data->m_heap,index_coder,&index_coder); 
+      
+      printf("coder %d takes dongle %d\n",s_data->m_heap->queue[index_coder].coder_id,s_data->m_heap->queue[index_coder].left->dongle_id);
+      printf("coder %d takes dongle %d\n",s_data->m_heap->queue[index_coder].coder_id,s_data->m_heap->queue[index_coder].right->dongle_id);
+      printf("coder %d is compiling ...\n",s_data->m_heap->queue[index_coder].coder_id);
+      printf("\n");
+      pthread_mutex_unlock(s_data->mutex_1);
+          
+      compiling(s_data->args->time_to_compile);
+      cooldown(s_data->args->dongle_cooldown);
+      
+      pthread_mutex_lock(s_data->mutex_1);
+          s_data->m_heap->queue[index_coder].left->state_dongle = 0;
+          s_data->m_heap->queue[index_coder].right->state_dongle = 0;
+          s_data->m_heap->queue[index_coder].state_coder = 0;  
+          s_data->m_heap->queue[index_coder].count_compiled++;
+        //   if(s_data->m_heap->queue[index_coder].count_compiled < s_data->args->number_of_compiles_required )
+            // rotate_queue(s_data->m_heap);
+        //   else
+        //     pop(s_data->m_heap);
+      pthread_cond_broadcast(s_data->cond_1);
+      pthread_mutex_unlock(s_data->mutex_1);
+      
+      debugging(s_data->args->time_to_debug);
+      refactoring(s_data->args->time_to_refactor);
         
-        pthread_mutex_lock(s_data->mutex_1);
-        
-        s_data->m_heap->queue[index_coder].left->state_dongle = 0;
-        s_data->m_heap->queue[index_coder].right->state_dongle = 0;
-        s_data->m_heap->queue[index_coder].state_coder = 0;  
-        // pop(s_data->m_heap);
-        pthread_cond_broadcast(s_data->cond_1);
-
-    }
-    else
-        pthread_cond_wait(s_data->cond_1,s_data->mutex_1);
-    pthread_mutex_unlock(s_data->mutex_1);
-    return NULL;
+      return NULL;
 }
 
 
@@ -236,13 +267,7 @@ int main(int c,char **v)
     i = -1;
     while (++i < (int)args.number_of_coders)
         pthread_join(arr_pthread[i],NULL);
-    
-    
-    i = -1;
-    while (++i < (int)m_heap->size)
-    {
-        printf("id : %d\n",m_heap->queue[i].coder_id);
-    }
+
     
     i = -1;
     while (++i < (int)args.number_of_coders)
