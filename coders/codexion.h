@@ -10,6 +10,7 @@
 #include <sys/time.h>
 
 #define TIME unsigned int 
+
 typedef struct
 {   
     unsigned int number_of_coders; 
@@ -23,53 +24,57 @@ typedef struct
 
 } t_args;
 
+typedef struct 
+{
+    void *queue;
+    unsigned int size;
+
+} min_heap;
+
 typedef struct s_dongle
 {
     unsigned int dongle_id;
-    unsigned int state_dongle;
+    pthread_mutex_t *mutex_dongle;
+    pthread_cond_t *cond_dongle;
+    min_heap *m_heap; 
 
 } t_dongle;
 
 typedef struct s_coder
 {
     unsigned int coder_id;
-    unsigned int priorety;
-    unsigned int state_coder;
     unsigned int count_compiled;
+    pthread_mutex_t *mutex_coder;
+    pthread_cond_t *cond_coder;
     t_dongle *left;
     t_dongle *right;
 } t_coder;
 
-typedef struct 
-{
-    t_coder *queue;
-    unsigned int size;
-} min_heap;
 
 typedef struct
 {
-    min_heap *m_heap;
-    t_coder coder;
+    t_coder *coder;
     t_args *args;
-    pthread_mutex_t *mutex_1;
-    pthread_cond_t *cond_1;
-    unsigned int *priority_counter;
+    pthread_cond_t *cond_display;
     pthread_mutex_t *mutex_display;
-
-    
 } t_shared_data;
 
 
 
 
-
 int parsing (int c,char **v,t_args *args);
-t_dongle *ft_create_dongle(unsigned int dongle_id);
-t_coder *ft_create_coder(unsigned int coder_id,unsigned int priorety,t_dongle *left,t_dongle *right);
-void push(min_heap *m_heap,t_coder coder);
+min_heap *init_min_heap();
+void set_dongle(t_dongle *dongle,unsigned int dongle_id,min_heap *m_heap,pthread_mutex_t *mutex,pthread_cond_t *cond);
+void init_arr_mutex(pthread_mutex_t *ptr_mutex,unsigned int dongles_size);
+void destroy_arr_mutex(pthread_mutex_t *ptr_mutex,unsigned int dongles_size);
+void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t *ptr_mutex,pthread_cond_t *ptr_cond,pthread_mutex_t *ptr_mutex_coder,pthread_cond_t *ptr_cond_coder);
+void init_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
+void destroy_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
+void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond);
+void *coder_routine (void *data);
+void push(min_heap *m_heap,t_coder *coder);
+void compile(TIME t_compile);
+void debugging_hh(t_dongle *dongle);
+void compile(TIME t_compile);
 void pop(min_heap *m_heap);
-int ft_get_index (min_heap *m_heap,unsigned int coder_id);
-void move_coder(min_heap *m_heap,unsigned int index_from,int *index_ptr);
-void update_index(int *ptr_to_index,min_heap *m_heap,unsigned int coder_id);
-void rotate_queue(min_heap *m_heap);
 #endif 
