@@ -21,8 +21,10 @@ int main(int c,char **v)
     
     init_arr_mutex(mutex_arr,args.number_of_coders);
     pthread_mutex_init(&main_mutex,NULL);
+    pthread_mutex_init(&display_mutex,NULL);
     init_arr_cond(cond_arr,args.number_of_coders);
     pthread_cond_init(&main_cond,NULL);
+    pthread_cond_init(&display_cond,NULL);
     
     if(!arr_coders || !s_data)
         return 1;
@@ -43,9 +45,12 @@ int main(int c,char **v)
         i++;
     }
 
+    pthread_cond_destroy(&display_cond);
     pthread_cond_destroy(&main_cond);
     destroy_arr_cond(cond_arr,args.number_of_coders);
     pthread_mutex_destroy(&main_mutex);
+    pthread_mutex_destroy(&display_mutex);
     destroy_arr_mutex(mutex_arr,args.number_of_coders);
+
     return 0;
 }

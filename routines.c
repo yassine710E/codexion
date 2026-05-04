@@ -39,7 +39,13 @@ void *coder_routine (void *data)
     compile(s_data->args->time_to_compile*1000);
     cooldown(s_data->args->dongle_cooldown*1000);
     pthread_mutex_lock(s_data->main_mutex);
-    
+    // printf("this is coder %d\n",s_data->coder->coder_id);
+    // printf("left : [");
+    // debugging_hh(s_data->coder->left);
+    // printf("]\n");
+    // printf("right : [");
+    // debugging_hh(s_data->coder->right);
+    // printf("]\n");
 
     s_data->coder->count_compiled++;
     
