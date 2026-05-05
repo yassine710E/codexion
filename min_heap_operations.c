@@ -19,3 +19,14 @@ void pop(min_heap *m_heap)
     }
     m_heap->size --;       
 }
+
+void swap(min_heap *m_heap)
+{
+    if(!m_heap)
+        return;
+    t_coder *queue = (t_coder *)m_heap->queue;
+    t_coder tmp;
+    tmp = queue[0];
+    queue[0] = queue[1];
+    queue[1] = tmp;
+}

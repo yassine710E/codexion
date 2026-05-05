@@ -44,6 +44,7 @@ typedef struct s_coder
 {
     unsigned int coder_id;
     unsigned int count_compiled;
+    long last_compile_start;
     t_dongle *left;
     t_dongle *right;
 } t_coder;
@@ -58,6 +59,7 @@ typedef struct
     pthread_mutex_t *main_mutex;
     pthread_cond_t *main_cond;
     struct timeval start;
+    unsigned int *how_many_coders_wait;
 } t_shared_data;
 
 
@@ -71,7 +73,7 @@ void destroy_arr_mutex(pthread_mutex_t *ptr_mutex,unsigned int dongles_size);
 void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t *ptr_mutex,pthread_cond_t *ptr_cond);
 void init_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
 void destroy_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
-void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval);
+void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start,unsigned int *how_many_waits);
 void *coder_routine (void *data);
 void push(min_heap *m_heap,t_coder *coder);
 void compile(TIME t_compile);
@@ -82,4 +84,5 @@ void debugging(TIME t_debugging);
 void refactoring(TIME t_refactoring);
 void pop(min_heap *m_heap);
 long get_timestamp_ms(struct timeval start);
+void swap(min_heap *m_heap);
 #endif 

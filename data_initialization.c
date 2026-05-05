@@ -64,7 +64,7 @@ void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t 
 }
 
 
-void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start)
+void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start,unsigned int *how_many_waits)
 {
     unsigned int i = 0;
     while (i < args->number_of_coders)
@@ -76,6 +76,7 @@ void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args
         arr_s_data[i].main_mutex = main_mutex;
         arr_s_data[i].main_cond = main_cond;
         arr_s_data[i].start = start;
+        arr_s_data[i].how_many_coders_wait = how_many_waits;
         i++;
     }
     
