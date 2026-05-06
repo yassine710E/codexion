@@ -32,7 +32,7 @@ int main(int c,char **v)
     set_coders(arr_coders,args.number_of_coders,mutex_arr,cond_arr);
     gettimeofday(&start, NULL);
     set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&how_many_waits);
-    unsigned int i = 0;
+    int i = 0;
     while (i < args.number_of_coders)
     {
         pthread_create(arr_threads + i,NULL,coder_routine,s_data + i);

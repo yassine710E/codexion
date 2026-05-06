@@ -58,6 +58,7 @@ void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t 
         arr_coders[i].coder_id = i+1;
         arr_coders[i].count_compiled = 0;
         arr_coders[i].left = left;
+        arr_coders[i].priority_for_fifo = -1;
         arr_coders[i].right=right;
         i++;
     }
@@ -66,7 +67,7 @@ void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t 
 
 void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start,unsigned int *how_many_waits)
 {
-    unsigned int i = 0;
+    int i = 0;
     while (i < args->number_of_coders)
     {
         arr_s_data[i].args = args;
