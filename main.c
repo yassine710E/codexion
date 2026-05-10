@@ -3,8 +3,8 @@
 int main(int c,char **v)
 {
     t_args args;
-    long l_c_start = -1;
     struct timeval start;
+    int flag_is_step_compiling_finished = 0;
     if(!parsing(c,v,&args))
         return 1;
     t_coder *arr_coders = malloc(sizeof(t_coder) * args.number_of_coders);
@@ -31,7 +31,7 @@ int main(int c,char **v)
         return 1;
     set_coders(arr_coders,args.number_of_coders,mutex_arr,cond_arr);
     gettimeofday(&start, NULL);
-    set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&l_c_start);
+    set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&flag_is_step_compiling_finished);
     int i = 0;
     while (i < args.number_of_coders)
     {
