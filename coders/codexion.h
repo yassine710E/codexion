@@ -60,7 +60,6 @@ typedef struct
     pthread_mutex_t *main_mutex;
     pthread_cond_t *main_cond;
     struct timeval start;
-    int *flag_is_step_compiling_finished;    
 } t_shared_data;
 
 
@@ -74,7 +73,7 @@ void destroy_arr_mutex(pthread_mutex_t *ptr_mutex,unsigned int dongles_size);
 void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t *ptr_mutex,pthread_cond_t *ptr_cond);
 void init_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
 void destroy_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
-void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start,int *step);
+void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start);
 void *coder_routine (void *data);
 void push(min_heap *m_heap,t_coder *coder);
 void compile(TIME t_compile);
@@ -87,4 +86,12 @@ void pop(min_heap *m_heap);
 long get_timestamp_ms(struct timeval start);
 void swap (t_coder *item1,t_coder *item2);
 int get_min_context(char *scheduler,min_heap *m_heap);
+void debugging_hh(t_dongle *dongle);
+void request_dongle(t_coder *coder,t_dongle *dongle);
+void leave_dongle (t_dongle *dongle);
+void logs(pthread_mutex_t *display_mutex,char *message,long current_time,int coder_id);
+void set_deadline(char *scheduler,t_coder *coder,struct timeval start,TIME t_to_burnout);
+int is_coder_exist_in_queue(min_heap *m_heap,int coder_id);
+
+
 #endif 
