@@ -36,6 +36,7 @@ typedef struct s_dongle
     int dongle_id;
     pthread_mutex_t *mutex_dongle;
     pthread_cond_t *cond_dongle;
+    long last_compile_start_saver;
     min_heap *m_heap; 
 
 } t_dongle;
@@ -45,6 +46,7 @@ typedef struct s_coder
     int coder_id;
     int count_compiled;
     long last_compile_start;
+    int is_waiting;
     long deadline;
     t_dongle *left;
     t_dongle *right;
@@ -55,6 +57,7 @@ typedef struct
 {
     t_coder *coder;
     t_args *args;
+    int *flag_burnout;
     pthread_cond_t *cond_display;
     pthread_mutex_t *mutex_display;
     pthread_mutex_t *main_mutex;
@@ -73,15 +76,11 @@ void destroy_arr_mutex(pthread_mutex_t *ptr_mutex,unsigned int dongles_size);
 void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t *ptr_mutex,pthread_cond_t *ptr_cond);
 void init_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
 void destroy_arr_cond(pthread_cond_t *ptr_cond,unsigned int dongles_size);
-void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start);
+void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start,int *flag);
 void *coder_routine (void *data);
 void push(min_heap *m_heap,t_coder *coder);
-void compile(TIME t_compile);
 void debugging_hh(t_dongle *dongle);
-void compile(TIME t_compile);
-void cooldown(TIME t_cooldown);
-void debugging(TIME t_debugging);
-void refactoring(TIME t_refactoring);
+int sleep_for_operation(TIME t_operation,t_shared_data *s_data);
 void pop(min_heap *m_heap);
 long get_timestamp_ms(struct timeval start);
 void swap (t_coder *item1,t_coder *item2);
@@ -92,6 +91,7 @@ void leave_dongle (t_dongle *dongle);
 void logs(pthread_mutex_t *display_mutex,char *message,long current_time,int coder_id);
 void set_deadline(char *scheduler,t_coder *coder,struct timeval start,TIME t_to_burnout);
 int is_coder_exist_in_queue(min_heap *m_heap,int coder_id);
+void *routine_monitor(void *data);
 
 
 #endif 

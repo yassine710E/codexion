@@ -1,25 +1,17 @@
 #include "coders/codexion.h"
 
-void compile(TIME t_compile)
+int sleep_for_operation(TIME t_operation,t_shared_data *s_data)
 {
-    usleep(t_compile * 1000);
+    long end = get_timestamp_ms(s_data->start) + t_operation;
+    while (get_timestamp_ms(s_data->start) < end)
+    {
+        if(*s_data->flag_burnout)
+            return 0;
+        usleep(500);
+    }
+    return 1;
 }
 
-void cooldown(TIME t_cooldown)
-{
-    usleep(t_cooldown * 1000);
-}
-
-void debugging(TIME t_debugging)
-{
-    usleep(t_debugging * 1000);
-}
-
-
-void refactoring(TIME t_refactoring)
-{
-    usleep(t_refactoring * 1000);
-}
 
 
 long get_timestamp_ms(struct timeval start)

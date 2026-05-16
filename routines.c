@@ -16,16 +16,21 @@ static void release_dongle_if_coder_takes_one_dongle(t_shared_data *s_data)
 }
 
 
-// static void wait_for_dongle_cooldown(t_shared_data *s_data)
-// {
-//     while(1)
-//     {
-//         if(get_timestamp_ms(s_data->start) > s_data->coder->last_compile_start + s_data->args->time_to_compile + s_data->args->dongle_cooldown)
-//             break;
-//     }
-// }
+static void wait_for_dongle_cooldown(t_shared_data *s_data,t_dongle *left,t_dongle *right)
+{
+    long lcs;
+    if(left->last_compile_start_saver > right->last_compile_start_saver)
+        lcs = left->last_compile_start_saver;
+    else
+        lcs = right->last_compile_start_saver;
+    while(1)
+    {
+        if(get_timestamp_ms(s_data->start) >  + lcs + s_data->args->dongle_cooldown)
+            break;
+    }
+}
 
-static void wait_for_waiter_coders(t_shared_data *s_data)
+static int wait_for_waiter_coders(t_shared_data *s_data)
 {
     t_coder *coder = s_data->coder;
     t_coder *left = (t_coder *)coder->left->m_heap->queue;
@@ -34,23 +39,20 @@ static void wait_for_waiter_coders(t_shared_data *s_data)
     
     while(coder->coder_id != left[0].coder_id || coder->coder_id != right[0].coder_id)
     {
+        coder->is_waiting = 1;
         pthread_cond_wait(s_data->main_cond , s_data->main_mutex);
+        if(*s_data->flag_burnout)
+            return 0;
         if(!is_coder_exist_in_queue(coder->left->m_heap,coder->coder_id))
                request_dongle(coder,coder->left);
         if(!is_coder_exist_in_queue(coder->right->m_heap,coder->coder_id))
                request_dongle(coder,coder->right);
-        // wait_for_dongle_cooldown(s_data);
-        // printf("coder %d awake and last compile start %ld\n",coder->coder_id,coder->last_compile_start);
-        // printf("left : [");
-        //     debugging_hh(coder->left);
-        // printf("]\n");
-        // printf("right : [");
-        //     debugging_hh(coder->right);
-        // printf("]\n");
+        wait_for_dongle_cooldown(s_data,coder->left,coder->right);
 
     }
-    
+    coder->is_waiting = 0;
     pthread_mutex_unlock(s_data->main_mutex);
+    return 1;
 }
 
 static void broadcast_other_coders(t_shared_data *s_data)
@@ -79,7 +81,10 @@ void *coder_routine (void *data)
         
         release_dongle_if_coder_takes_one_dongle(s_data);
         
-        wait_for_waiter_coders(s_data);
+        if(!wait_for_waiter_coders(s_data))
+        {
+            return NULL;
+        }
         
         //coder takes two dongles
         logs(s_data->mutex_display,"has taken a dongle",get_timestamp_ms(s_data->start),coder->coder_id);
@@ -89,29 +94,65 @@ void *coder_routine (void *data)
         // //compiling
         coder->last_compile_start  = get_timestamp_ms(s_data->start);
         logs(s_data->mutex_display,"is compiling",coder->last_compile_start,coder->coder_id);
-        compile(s_data->args->time_to_compile);
-    
+        if(!sleep_for_operation(s_data->args->time_to_compile,s_data))
+            return NULL;
+        
         //leave dongles
         leave_dongle(coder->left);
         leave_dongle(coder->right);
      
         //increment count compiled
         coder->count_compiled++;
-    
+
+        //save last compile start
+        coder->left->last_compile_start_saver = coder->last_compile_start;
+        coder->right->last_compile_start_saver = coder->last_compile_start;
+
         //broadcast for other coders
         broadcast_other_coders(s_data); 
     
         logs(s_data->mutex_display,"is debugging",get_timestamp_ms(s_data->start),coder->coder_id);
-        debugging(s_data->args->time_to_debug);
+        if(!sleep_for_operation(s_data->args->time_to_debug,s_data))
+            return NULL;
     
         logs(s_data->mutex_display,"is refactoring",get_timestamp_ms(s_data->start),coder->coder_id);
-        refactoring(s_data->args->time_to_refactor);
-         
+        if(!sleep_for_operation(s_data->args->time_to_refactor,s_data))
+            return NULL;
+
     }
 
 
     return NULL;
+}
 
+
+
+void *routine_monitor(void *data)
+{
+    if(!data)
+        return NULL;
+    t_shared_data *s_data = (t_shared_data *)data;
+    long now;
+    while (1)
+    {
+        if(*s_data->flag_burnout)
+            return NULL;
+        now = get_timestamp_ms(s_data->start);
+        if (now - s_data->coder->last_compile_start >= s_data->args->time_to_burnout && s_data->coder->is_waiting)
+        {
+            *s_data->flag_burnout = 1;
+            broadcast_other_coders(s_data);
+            printf("%ld %d burned out\n",now,s_data->coder->coder_id);
+
+            return NULL;
+        }
+        usleep(500);
+        printf("hhhhhhhh\n");
+    }
+    
+    
+
+    return NULL;
 }
 
 
@@ -123,10 +164,5 @@ void *coder_routine (void *data)
 
 
 
-
-
-
-
-//process of coder operation 
 
 

@@ -3,6 +3,7 @@
 int main(int c,char **v)
 {
     t_args args;
+    int detected_flag_burnout = 0;
     struct timeval start;
     if(!parsing(c,v,&args))
         return 1;
@@ -17,6 +18,7 @@ int main(int c,char **v)
     pthread_mutex_t display_mutex;
     pthread_cond_t display_cond;
     pthread_t arr_threads[args.number_of_coders];
+    pthread_t arr_threads_monitors[args.number_of_coders];
 
     
     init_arr_mutex(mutex_arr,args.number_of_coders);
@@ -30,10 +32,11 @@ int main(int c,char **v)
         return 1;
     set_coders(arr_coders,args.number_of_coders,mutex_arr,cond_arr);
     gettimeofday(&start, NULL);
-    set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start);
+    set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&detected_flag_burnout);
     int i = 0;
     while (i < args.number_of_coders)
     {
+        pthread_create(arr_threads_monitors + i,NULL,routine_monitor,s_data + i);
         pthread_create(arr_threads + i,NULL,coder_routine,s_data + i);
         i++;
     }
@@ -42,6 +45,7 @@ int main(int c,char **v)
     while (i < args.number_of_coders)
     {
         pthread_join(arr_threads[i],NULL);
+        pthread_join(arr_threads_monitors[i],NULL);
         i++;
     }
 

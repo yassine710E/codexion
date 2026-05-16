@@ -18,6 +18,7 @@ void set_dongle(t_dongle *dongle,unsigned int dongle_id,min_heap *m_heap,pthread
     dongle->m_heap = m_heap;
     dongle->mutex_dongle = mutex;
     dongle->cond_dongle = cond;
+    dongle->last_compile_start_saver = 0;
 }
 
 void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t *ptr_mutex,pthread_cond_t *ptr_cond)
@@ -59,12 +60,13 @@ void set_coders(t_coder *arr_coders , unsigned int size_coders ,pthread_mutex_t 
         arr_coders[i].count_compiled = 0;
         arr_coders[i].left = left;
         arr_coders[i].right=right;
+        arr_coders[i].is_waiting = 0;
         i++;
     }
 }
 
 
-void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start)
+void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args,pthread_mutex_t *d_mutex,pthread_cond_t *d_cond,pthread_mutex_t *main_mutex,pthread_cond_t *main_cond,struct timeval start,int *flag)
 {
     int i = 0;
     while (i < args->number_of_coders)
@@ -76,6 +78,7 @@ void set_shared_data (t_shared_data *arr_s_data,t_coder *arr_coders,t_args *args
         arr_s_data[i].main_mutex = main_mutex;
         arr_s_data[i].main_cond = main_cond;
         arr_s_data[i].start = start;
+        arr_s_data[i].flag_burnout = flag;
         i++;
     }
     
