@@ -31,6 +31,7 @@ int main(int c,char **v)
     
     if(!arr_coders || !s_data)
         return 1;
+
     set_coders(arr_coders,args.number_of_coders,mutex_arr,cond_arr);
     gettimeofday(&start, NULL);
     set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&detected_flag_burnout,&how_many_coders_finished);
@@ -56,6 +57,22 @@ int main(int c,char **v)
     pthread_mutex_destroy(&main_mutex);
     pthread_mutex_destroy(&display_mutex);
     destroy_arr_mutex(mutex_arr,args.number_of_coders);
+    
+    i = 0;
+    while (i < args.number_of_coders)
+    {
+        free(arr_coders[i].left->m_heap->queue);
+        arr_coders[i].left->m_heap->queue = NULL;
+        free(arr_coders[i].left->m_heap);
+        arr_coders[i].left->m_heap = NULL;
+        free(arr_coders[i].left);
+        arr_coders[i].left = NULL;
+        i++;
+    }
+    
+    
+    free(arr_coders);
+    free(s_data);
 
     return 0;
 }

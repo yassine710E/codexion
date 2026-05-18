@@ -69,7 +69,6 @@ void *coder_routine (void *data)
     t_shared_data *s_data = (t_shared_data *)data;
     t_coder *coder = s_data->coder;
 
-
     while (coder->count_compiled < s_data->args->number_of_compiles_required && !*s_data->flag_burnout)
     {
         //set deadline here !!   
@@ -91,9 +90,11 @@ void *coder_routine (void *data)
         logs(s_data->mutex_display,"has taken a dongle",get_timestamp_ms(s_data->start),coder->coder_id);
         logs(s_data->mutex_display,"has taken a dongle",get_timestamp_ms(s_data->start),coder->coder_id);
 
-    
         //compiling
-        coder->last_compile_start  = get_timestamp_ms(s_data->start);
+        pthread_mutex_lock(s_data->main_mutex);
+            coder->last_compile_start  = get_timestamp_ms(s_data->start);
+        pthread_mutex_unlock(s_data->main_mutex);
+    
         if(!sleep_for_operation(s_data->args->time_to_compile,s_data,coder->last_compile_start,"is compiling"))
             break;
         
@@ -136,8 +137,11 @@ void *routine_monitor(void *data)
         now = get_timestamp_ms(s_data->start);
         if(*s_data->flag_burnout || s_data->coder->count_compiled == s_data->args->number_of_compiles_required)
             return NULL;
+        pthread_mutex_lock(s_data->main_mutex);
         if (now - s_data->coder->last_compile_start >= s_data->args->time_to_burnout && s_data->coder->is_waiting)
         {
+        pthread_mutex_unlock(s_data->main_mutex);
+
 
             *s_data->flag_burnout = 1;
             broadcast_other_coders(s_data);
@@ -147,13 +151,15 @@ void *routine_monitor(void *data)
             pthread_mutex_unlock(s_data->mutex_display);            
             return NULL;
         }
+        else
+            pthread_mutex_unlock(s_data->main_mutex);
+
         usleep(500);
     }
     
 
     return NULL;
 }
-
 
 //case of 1 coder not handled 
 //and stress tests (validated)
