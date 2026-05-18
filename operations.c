@@ -1,12 +1,17 @@
 #include "coders/codexion.h"
 
-int sleep_for_operation(TIME t_operation,t_shared_data *s_data)
+int sleep_for_operation(TIME t_operation,t_shared_data *s_data,long last_operation_start,char *msg)
 {
     long end = get_timestamp_ms(s_data->start) + t_operation;
+    
+    logs(s_data->mutex_display,msg,last_operation_start,s_data->coder->coder_id);
+    
     while (get_timestamp_ms(s_data->start) < end)
     {
-        if(*s_data->flag_burnout)
+        if(*s_data->flag_burnout){
+            broadcast_other_coders(s_data);
             return 0;
+        }
         usleep(500);
     }
     return 1;

@@ -4,6 +4,7 @@ int main(int c,char **v)
 {
     t_args args;
     int detected_flag_burnout = 0;
+    int how_many_coders_finished = 0;
     struct timeval start;
     if(!parsing(c,v,&args))
         return 1;
@@ -32,7 +33,7 @@ int main(int c,char **v)
         return 1;
     set_coders(arr_coders,args.number_of_coders,mutex_arr,cond_arr);
     gettimeofday(&start, NULL);
-    set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&detected_flag_burnout);
+    set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&detected_flag_burnout,&how_many_coders_finished);
     int i = 0;
     while (i < args.number_of_coders)
     {

@@ -48,3 +48,10 @@ int is_coder_exist_in_queue(min_heap *m_heap,int coder_id)
     }
     return 0;
 }
+
+void broadcast_other_coders(t_shared_data *s_data)
+{
+    pthread_mutex_lock(s_data->main_mutex);
+        pthread_cond_broadcast(s_data->main_cond);
+    pthread_mutex_unlock(s_data->main_mutex);
+}
