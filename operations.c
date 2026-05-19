@@ -3,11 +3,15 @@
 int sleep_for_operation(TIME t_operation,t_shared_data *s_data,long last_operation_start,char *msg)
 {
     long end = get_timestamp_ms(s_data->start) + t_operation;
-    
+    int f;
     logs(s_data->mutex_display,msg,last_operation_start,s_data->coder->coder_id);
     while (get_timestamp_ms(s_data->start) < end)
     {
-        if(*s_data->flag_burnout){
+        pthread_mutex_lock(s_data->main_mutex);
+            f = *s_data->flag_burnout;
+        pthread_mutex_unlock(s_data->main_mutex);
+
+        if(f){
             broadcast_other_coders(s_data);
             return 0;
         }

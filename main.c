@@ -19,7 +19,7 @@ int main(int c,char **v)
     pthread_mutex_t display_mutex;
     pthread_cond_t display_cond;
     pthread_t arr_threads[args.number_of_coders];
-    pthread_t arr_threads_monitors[args.number_of_coders];
+    pthread_t thread_monitor;
 
     
     init_arr_mutex(mutex_arr,args.number_of_coders);
@@ -36,9 +36,10 @@ int main(int c,char **v)
     gettimeofday(&start, NULL);
     set_shared_data(s_data,arr_coders,&args,&display_mutex,&display_cond,&main_mutex,&main_cond,start,&detected_flag_burnout,&how_many_coders_finished);
     int i = 0;
+    pthread_create(&thread_monitor,NULL,routine_monitor,s_data);
+    
     while (i < args.number_of_coders)
     {
-        pthread_create(arr_threads_monitors + i,NULL,routine_monitor,s_data + i);
         pthread_create(arr_threads + i,NULL,coder_routine,s_data + i);
         i++;
     }
@@ -47,9 +48,10 @@ int main(int c,char **v)
     while (i < args.number_of_coders)
     {
         pthread_join(arr_threads[i],NULL);
-        pthread_join(arr_threads_monitors[i],NULL);
         i++;
     }
+    
+    pthread_join(thread_monitor,NULL);
 
     pthread_cond_destroy(&display_cond);
     pthread_cond_destroy(&main_cond);

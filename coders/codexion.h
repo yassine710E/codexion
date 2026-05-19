@@ -69,6 +69,7 @@ typedef struct
 
 
 
+
 int parsing (int c,char **v,t_args *args);
 min_heap *init_min_heap();
 void set_dongle(t_dongle *dongle,unsigned int dongle_id,min_heap *m_heap,pthread_mutex_t *mutex,pthread_cond_t *cond);
