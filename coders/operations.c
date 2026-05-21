@@ -4,7 +4,6 @@ int sleep_for_operation(TIME t_operation,t_shared_data *s_data,long last_operati
 {
     long end = get_timestamp_ms(s_data->start) + t_operation;
     int f;
-    logs(s_data->mutex_display,msg,last_operation_start,s_data->coder->coder_id);
     while (get_timestamp_ms(s_data->start) < end)
     {
         pthread_mutex_lock(s_data->main_mutex);
@@ -17,6 +16,7 @@ int sleep_for_operation(TIME t_operation,t_shared_data *s_data,long last_operati
         }
         usleep(500);
     }
+    logs(s_data->mutex_display,msg,last_operation_start,s_data->coder->coder_id);
     return 1;
 }
 

@@ -36,12 +36,19 @@ void set_deadline(char *scheduler,t_coder *coder,struct timeval start,TIME t_to_
         coder->deadline = coder->last_compile_start + t_to_burnout;    
 }
 
-int is_coder_exist_in_queue(min_heap *m_heap,int coder_id)
+int is_coder_exist_in_queue(min_heap *m_heap,int coder_id,pthread_mutex_t *dongle_mutex)
 {   
     int i = 0;
     t_coder *arr_coders = (t_coder *)m_heap->queue;
-    while (i < m_heap->size)
+    int condition;
+    while (1)
     {
+        pthread_mutex_lock(dongle_mutex);
+            condition = i < m_heap->size;
+        pthread_mutex_unlock(dongle_mutex);
+        if(!condition)
+            break;
+        
         if(coder_id == arr_coders[i].coder_id)
             return 1;
         i++;

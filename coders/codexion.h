@@ -92,7 +92,7 @@ void request_dongle(t_coder *coder,t_dongle *dongle);
 void leave_dongle (t_dongle *dongle);
 void logs(pthread_mutex_t *display_mutex,char *message,long current_time,int coder_id);
 void set_deadline(char *scheduler,t_coder *coder,struct timeval start,TIME t_to_burnout);
-int is_coder_exist_in_queue(min_heap *m_heap,int coder_id);
+int is_coder_exist_in_queue(min_heap *m_heap,int coder_id,pthread_mutex_t *dongle_mutex);
 void *routine_monitor(void *data);
 void broadcast_other_coders(t_shared_data *s_data);
 
