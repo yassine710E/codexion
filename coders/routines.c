@@ -25,7 +25,7 @@ static void wait_for_dongle_cooldown(t_shared_data *s_data,t_dongle *left,t_dong
         lcs = right->last_compile_start_saver;
     while(1)
     {
-        if(get_timestamp_ms(s_data->start) >  + lcs + s_data->args->dongle_cooldown)
+        if(get_timestamp_ms(s_data->start) >= lcs  + s_data->args->time_to_compile + s_data->args->dongle_cooldown)
             break;
     }
 }
@@ -154,6 +154,7 @@ void *coder_routine (void *data)
     
         if(!sleep_for_operation(s_data->args->time_to_refactor,s_data,get_timestamp_ms(s_data->start),"is refactoring"))
             break;
+         
     }
     pthread_mutex_lock(s_data->main_mutex);
         *s_data->how_many_coders_finished += 1;        
@@ -199,7 +200,8 @@ void *routine_monitor(void *data)
             
             pthread_mutex_lock(s_data->main_mutex);
                 now = get_timestamp_ms(s_data->start);
-                condition_3 = now - arr_coders[i].last_compile_start >= s_data->args->time_to_burnout && arr_coders[i].is_waiting;
+                condition_3 = now - arr_coders[i].last_compile_start >= s_data->args->time_to_burnout
+                    && arr_coders[i].count_compiled < s_data->args->number_of_compiles_required;
                 if(condition_3)
                    *s_data->flag_burnout = 1; 
             pthread_mutex_unlock(s_data->main_mutex);
